@@ -12,7 +12,7 @@ const SHELL_TEMPLATES = {
             command _ccenv_core
         else
             case "$1" in
-                -h|--help|-v|--version|ls|edit|e)
+                -h|--help|-v|--version|ls|edit|e|lang)
                     command _ccenv_core "$@"
                     ;;
                 use|u)
@@ -21,8 +21,12 @@ const SHELL_TEMPLATES = {
                 --auto-apply-default)
                     eval "$(command _ccenv_core "$@")"
                     ;;
-                *)
+                default)
                     command _ccenv_core "$@"
+                    ;;
+                *)
+                    # Try as profile name
+                    eval "$(command _ccenv_core "$@")"
                     ;;
             esac
         fi
@@ -47,7 +51,7 @@ fi`
             command _ccenv_core
         else
             case "$1" in
-                -h|--help|-v|--version|ls|edit|e)
+                -h|--help|-v|--version|ls|edit|e|lang)
                     command _ccenv_core "$@"
                     ;;
                 use|u)
@@ -56,8 +60,12 @@ fi`
                 --auto-apply-default)
                     eval "$(command _ccenv_core "$@")"
                     ;;
-                *)
+                default)
                     command _ccenv_core "$@"
+                    ;;
+                *)
+                    # Try as profile name
+                    eval "$(command _ccenv_core "$@")"
                     ;;
             esac
         fi
@@ -82,14 +90,17 @@ fi`
             command _ccenv_core
         else
             switch $argv[1]
-                case '-h' '--help' '-v' '--version' 'ls' 'edit' 'e'
+                case '-h' '--help' '-v' '--version' 'ls' 'edit' 'e' 'lang'
                     command _ccenv_core $argv
                 case 'use' 'u'
                     eval (command _ccenv_core $argv)
                 case '--auto-apply-default'
                     eval (command _ccenv_core $argv)
-                case '*'
+                case 'default'
                     command _ccenv_core $argv
+                case '*'
+                    # Try as profile name
+                    eval (command _ccenv_core $argv)
             end
         end
     else

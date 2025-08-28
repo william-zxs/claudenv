@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { getShellTemplate, detectShell } = require('./shell-templates');
+const { t } = require('./i18n');
 
 // 配置文件路径
 const os = require('os');
@@ -109,13 +110,13 @@ function installShellFunction() {
     const template = getShellTemplate(shellType);
     
     if (!template) {
-      console.log('⚠️  无法获取 shell 模板，请手动添加 shell 函数');
+      console.log(t('shell.template_unavailable'));
       return false;
     }
     
     const configFile = getShellConfigFile(shellType);
     if (!configFile) {
-      console.log(`⚠️  无法找到 ${shellType} 配置文件`);
+      console.log(t('shell.config_file_not_found', { shell: shellType }));
       return false;
     }
     
@@ -124,7 +125,7 @@ function installShellFunction() {
     if (fs.existsSync(configFile)) {
       existingContent = fs.readFileSync(configFile, 'utf8');
       if (existingContent.includes('ccenv function for easy profile switching')) {
-        console.log(`✅ ccenv shell 函数已存在于 ${configFile}`);
+        console.log(t('shell.function_exists', { path: configFile }));
         return true;
       }
     }
@@ -133,13 +134,13 @@ function installShellFunction() {
     const functionCode = `\n${template.comment}\n${template.function}\n`;
     fs.appendFileSync(configFile, functionCode);
     
-    console.log(`✅ 已安装 ccenv shell 函数到 ${configFile}`);
-    console.log(`   请运行 'source ${configFile}' 或重新打开终端以使用新函数`);
+    console.log(t('shell.function_installed', { path: configFile }));
+    console.log(t('shell.function_instruction', { path: configFile }));
     
     return true;
     
   } catch (error) {
-    console.log(`⚠️  安装 shell 函数时出错: ${error.message}`);
+    console.log(t('shell.install_error', { message: error.message }));
     return false;
   }
 }
@@ -149,40 +150,40 @@ function installShellFunction() {
  */
 function init() {
   try {
-    console.log('正在初始化 ccenv...');
+    console.log(t('init.initializing'));
     
     // 创建配置目录
     if (!fs.existsSync(CONFIG_DIR)) {
-      console.log(`创建配置目录: ${CONFIG_DIR}`);
+      console.log(t('init.creating_config_dir', { path: CONFIG_DIR }));
       ensureDir(CONFIG_DIR);
     }
     
     // 创建默认配置文件
     if (!fs.existsSync(CONFIG_FILE)) {
-      console.log(`创建默认配置文件: ${CONFIG_FILE}`);
+      console.log(t('init.creating_config_file', { path: CONFIG_FILE }));
       fs.writeFileSync(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2));
-      console.log('已创建默认配置文件');
+      console.log(t('init.config_file_created'));
     } else {
-      console.log('配置文件已存在，跳过创建');
+      console.log(t('init.config_file_exists'));
     }
     
     // 安装 shell 函数
-    console.log('\n正在安装 shell 函数...');
+    console.log('\n' + t('init.installing_shell_function'));
     installShellFunction();
     
-    console.log('\n✅ ccenv 初始化完成!');
+    console.log('\n' + t('init.completion_success'));
     console.log('');
-    console.log('使用方法:');
-    console.log('  ccenv ls         # 查看所有配置');
-    console.log('  ccenv kimi       # 切换到 kimi 配置');
-    console.log('  ccenv -h         # 显示帮助');
+    console.log(t('init.usage_title'));
+    console.log(t('init.usage.ls'));
+    console.log(t('init.usage.profile'));
+    console.log(t('init.usage.help'));
     console.log('');
-    console.log(`配置文件位置: ${CONFIG_FILE}`);
+    console.log(t('init.config_location', { path: CONFIG_FILE }));
     console.log('');
-    console.log('⚠️  注意: 请编辑配置文件，填入您的 API Token');
+    console.log(t('init.token_warning'));
     
   } catch (error) {
-    console.error('初始化失败:', error.message);
+    console.error(t('init.failed', { message: error.message }));
     process.exit(1);
   }
 }

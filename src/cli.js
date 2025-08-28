@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
+const { t, setLanguage, getSupportedLanguages, saveLanguageToConfig } = require('./i18n');
 
 // 配置文件路径
 const CONFIG_DIR = path.join(os.homedir(), '.ccenv');
@@ -29,8 +30,8 @@ function colorRed(text) {
  */
 function checkConfigFile() {
   if (!fs.existsSync(CONFIG_FILE)) {
-    console.error(`错误: 配置文件不存在 ${CONFIG_FILE}`);
-    console.error('请先运行安装脚本生成配置文件');
+    console.error(t('error.config_file_not_found', { path: CONFIG_FILE }));
+    console.error(t('error.install_script_required'));
     process.exit(1);
   }
 }
@@ -43,7 +44,7 @@ function readConfig() {
     const configContent = fs.readFileSync(CONFIG_FILE, 'utf8');
     return JSON.parse(configContent);
   } catch (error) {
-    console.error('错误: 无法读取配置文件:', error.message);
+    console.error(t('error.cannot_read_config', { message: error.message }));
     process.exit(1);
   }
 }
@@ -80,7 +81,7 @@ function setDefaultProfile(profileName) {
   
   // 验证配置名称是否存在
   if (!getProfileConfig(config, profileName)) {
-    console.error(`错误: 找不到配置 '${profileName}'`);
+    console.error(t('error.profile_not_found', { profile: profileName }));
     process.exit(1);
   }
   
@@ -89,9 +90,9 @@ function setDefaultProfile(profileName) {
   
   try {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
-    console.error(`已设置默认配置为: ${profileName}`);
+    console.error(t('success.default_profile_set', { profile: profileName }));
   } catch (error) {
-    console.error('错误: 无法保存配置文件:', error.message);
+    console.error(t('error.cannot_save_config', { message: error.message }));
     process.exit(1);
   }
 }
@@ -104,9 +105,9 @@ function showDefaultProfile() {
   const defaultProfile = getDefaultProfile(config);
   
   if (defaultProfile) {
-    console.error(`当前默认配置: ${defaultProfile}`);
+    console.error(t('info.current_default_profile', { profile: defaultProfile }));
   } else {
-    console.error('当前没有设置默认配置');
+    console.error(t('info.no_default_profile'));
   }
 }
 
@@ -118,7 +119,7 @@ function writeConfig(config) {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
     return true;
   } catch (error) {
-    console.error('错误: 无法保存配置文件:', error.message);
+    console.error(t('error.cannot_save_config', { message: error.message }));
     return false;
   }
 }
@@ -157,7 +158,7 @@ function applyProfile(config, profileName) {
   const profile = getProfileConfig(config, profileName);
   
   if (!profile) {
-    console.error(`错误: 找不到配置 '${profileName}'`);
+    console.error(t('error.profile_not_found', { profile: profileName }));
     process.exit(1);
   }
   
@@ -165,7 +166,7 @@ function applyProfile(config, profileName) {
   console.log(generateEnvCommands(profile));
   
   // 输出确认消息到 stderr，这样不会影响 eval
-  console.error(`已切换到配置: ${profileName}`);
+  console.error(t('success.switched_to_profile', { profile: profileName }));
 }
 
 /**
@@ -185,7 +186,7 @@ function autoApplyDefaultProfile() {
     const profile = getProfileConfig(config, defaultProfile);
     if (profile) {
       console.log(generateEnvCommands(profile));
-      console.error(`自动应用默认配置: ${defaultProfile}`);
+      console.error(t('success.auto_applied_default', { profile: defaultProfile }));
     }
   }
 }
@@ -194,21 +195,25 @@ function autoApplyDefaultProfile() {
  * 显示帮助信息
  */
 function showHelp() {
-  console.log('使用方法: ccenv [选项] [命令|配置名称]');
+  const supportedLanguages = getSupportedLanguages().join(', ');
+  console.log(t('help.usage'));
   console.log('');
-  console.log('命令:');
-  console.log('  ls                              列出所有可用配置');
-  console.log('  use, u <配置名称>                切换到指定配置');
-  console.log('  default                         显示当前默认配置');
-  console.log('  default <配置名称>               设置默认配置');
-  console.log('  edit, e                         编辑配置文件');
+  console.log(t('help.commands'));
+  console.log(t('help.cmd.ls'));
+  console.log(t('help.cmd.use'));
+  console.log(t('help.cmd.default'));
+  console.log(t('help.cmd.default_set'));
+  console.log(t('help.cmd.edit'));
+  console.log(t('help.cmd.lang'));
   console.log('');
-  console.log('选项:');
-  console.log('  -h, --help                      显示此帮助信息');
-  console.log('  -v, --version                   显示版本信息');
+  console.log(t('help.options'));
+  console.log(t('help.opt.help'));
+  console.log(t('help.opt.version'));
+  console.log(t('help.opt.lang'));
   console.log('');
-  console.log('说明:');
-  console.log('  设置默认配置后，打开新终端时会自动应用该配置的环境变量');
+  console.log(t('help.description'));
+  console.log(t('help.desc.default_config'));
+  console.log(t('help.desc.supported_langs', { languages: supportedLanguages }));
 }
 
 /**
@@ -219,18 +224,20 @@ function listProfiles() {
   const currentProfile = getCurrentProfile(config);
   const defaultProfile = getDefaultProfile(config);
   
-  console.error('可用的配置:');
+  console.error(t('info.available_configs'));
   config.profiles.forEach(profile => {
     const current = currentProfile && currentProfile.name === profile.name ? '*' : ' ';
-    const isDefault = defaultProfile === profile.name ? ' (默认)' : '';
+    const isDefault = defaultProfile === profile.name ? t('info.default_marker') : '';
     const baseUrl = profile.env?.ANTHROPIC_BASE_URL || 'N/A';
     const hasToken = profile.env?.ANTHROPIC_AUTH_TOKEN && profile.env.ANTHROPIC_AUTH_TOKEN.trim();
-    const tokenStatus = hasToken ? colorGreen('[TOKEN: ✓]') : colorRed('[TOKEN: ✗]');
+    const tokenStatus = hasToken ? colorGreen(t('label.token_configured')) : colorRed(t('label.token_missing'));
     console.error(`${current} ${profile.name}${isDefault} - ${baseUrl} ${tokenStatus}`);
   });
   console.error('');
-  console.error(`标记说明: * = 当前生效, (默认) = 默认配置, ${colorGreen('[TOKEN: ✓]')} = 已配置TOKEN, ${colorRed('[TOKEN: ✗]')} = 未配置TOKEN`);
-  console.error('使用方法: ccenv use <配置名称>');
+  const greenToken = colorGreen(t('label.token_configured'));
+  const redToken = colorRed(t('label.token_missing'));
+  console.error(t('info.status_legend', { green: greenToken, red: redToken }));
+  console.error(t('info.usage_instruction'));
 }
 
 /**
@@ -238,7 +245,7 @@ function listProfiles() {
  */
 function showVersion() {
   const packageJson = require('../package.json');
-  console.log(`ccenv v${packageJson.version}`);
+  console.log(t('version.ccenv', { version: packageJson.version }));
 }
 
 /**
@@ -249,8 +256,8 @@ function editConfig() {
   
   // 检查是否在 TTY 环境中
   if (!process.stdout.isTTY || !process.stdin.isTTY) {
-    console.error('错误: ccenv edit 需要在交互式终端环境中运行');
-    console.error('提示: 请直接在终端中运行 ccenv edit，不要通过管道或重定向');
+    console.error(t('error.edit_requires_tty'));
+    console.error(t('error.edit_tty_hint'));
     process.exit(1);
   }
   
@@ -259,13 +266,13 @@ function editConfig() {
   
   function tryEditor(index) {
     if (index >= editors.length) {
-      console.error('错误: 无法找到可用的编辑器 (vim 或 vi)');
-      console.error(`提示: 您可以直接编辑配置文件: ${CONFIG_FILE}`);
+      console.error(t('error.no_editor_found'));
+      console.error(t('error.edit_hint', { path: CONFIG_FILE }));
       process.exit(1);
     }
     
     const editor = editors[index];
-    console.error(`正在使用 ${editor} 打开配置文件...`);
+    console.error(t('info.editor_opening', { editor }));
     
     const editorProcess = spawn(editor, [CONFIG_FILE], {
       stdio: 'inherit',
@@ -279,19 +286,19 @@ function editConfig() {
     editorProcess.on('error', (error) => {
       if (error.code === 'ENOENT') {
         // 编辑器不存在，尝试下一个
-        console.error(`${editor} 不可用，尝试下一个编辑器...`);
+        console.error(t('info.editor_unavailable', { editor }));
         tryEditor(index + 1);
       } else {
-        console.error(`错误: 启动编辑器失败: ${error.message}`);
+        console.error(t('error.editor_start_failed', { message: error.message }));
         process.exit(1);
       }
     });
     
     editorProcess.on('exit', (code) => {
       if (code === 0) {
-        console.error('配置文件编辑完成');
+        console.error(t('success.editor_completed'));
       } else if (code !== null) {
-        console.error(`编辑器退出，退出代码: ${code}`);
+        console.error(t('info.editor_exit_code', { code }));
       }
       // 正常结束程序，不要让 Node.js 继续运行
       process.exit(code || 0);
@@ -304,7 +311,42 @@ function editConfig() {
 /**
  * 主函数
  */
+/**
+ * 显示或设置语言
+ */
+function handleLanguage(langCode) {
+  if (!langCode) {
+    // 显示当前语言
+    const currentLang = require('./i18n').getCurrentLanguage();
+    const langName = currentLang === 'zh' ? '中文' : 'English';
+    console.error(t('lang.current_language', { language: langName }));
+    return;
+  }
+  
+  if (setLanguage(langCode)) {
+    const langName = langCode === 'zh' ? '中文' : 'English';
+    console.error(t('lang.language_set', { language: langName }));
+    
+    // 保存语言设置到配置文件
+    if (!saveLanguageToConfig(langCode)) {
+      console.error(t('lang.save_failed'));
+    }
+  } else {
+    console.error(t('lang.unsupported_language', { language: langCode }));
+    console.error(t('lang.supported_languages', { languages: getSupportedLanguages().join(', ') }));
+    process.exit(1);
+  }
+}
+
 function main() {
+  // 检查是否有 --lang 参数
+  let langIndex = process.argv.findIndex(arg => arg === '--lang');
+  if (langIndex !== -1 && process.argv[langIndex + 1]) {
+    setLanguage(process.argv[langIndex + 1]);
+    // 移除 --lang 参数
+    process.argv.splice(langIndex, 2);
+  }
+  
   // 解析命令行参数
   const args = process.argv.slice(2);
   
@@ -340,8 +382,8 @@ function main() {
     case 'use':
     case 'u':
       if (args.length < 2) {
-        console.error(`错误: ${command} 命令需要指定配置名称`);
-        console.error(`使用方法: ccenv ${command} <配置名称>`);
+        console.error(t('error.command_requires_profile', { command }));
+        console.error(t('error.command_usage', { command }));
         process.exit(1);
       }
       // 检查配置文件
@@ -366,8 +408,21 @@ function main() {
       checkConfigFile();
       autoApplyDefaultProfile();
       return;
+    case 'lang':
+      // 检查配置文件
+      checkConfigFile();
+      handleLanguage(args[1]);
+      return;
     default:
-      console.error(`错误: 未知命令 '${command}'`);
+      // 检查是否直接指定配置名称
+      checkConfigFile();
+      const configForProfile = readConfig();
+      if (getProfileConfig(configForProfile, command)) {
+        applyProfile(configForProfile, command);
+        return;
+      }
+      
+      console.error(t('error.unknown_command', { command }));
       console.error('');
       showHelp();
       process.exit(1);
@@ -379,7 +434,7 @@ if (require.main === module) {
   try {
     main();
   } catch (error) {
-    console.error('程序执行出错:', error.message);
+    console.error(t('error.program_execution', { message: error.message }));
     process.exit(1);
   }
 }
