@@ -4,14 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ccenv is a command-line tool for quickly switching between different Claude API configurations. It manages environment variables and provides an interactive menu for selecting API providers like Moonshot AI (Kimi), Zhipu AI (GLM), Alibaba Tongyi Qianwen, and DeepSeek AI. The tool now features color-coded token status indicators to show configuration readiness at a glance.
+ccenv is a command-line tool for quickly switching between different Claude API configurations. It manages environment variables and provides an interactive menu for selecting API providers like Moonshot AI (Kimi), Zhipu AI (GLM), Alibaba Tongyi Qianwen, and DeepSeek AI. The tool features color-coded token status indicators to show configuration readiness at a glance and **full internationalization support with English and Chinese interfaces**.
 
 ## Architecture
 
-- **src/cli.js**: Main Node.js CLI script for interactive configuration switching
+- **src/cli.js**: Main Node.js CLI script for interactive configuration switching with i18n support
 - **src/init.js**: Initialization script that creates config directory and default settings.json
+- **src/i18n.js**: Internationalization module providing multi-language support
+- **src/locales/**: Directory containing language resource files (zh.json, en.json)
+- **src/shell-templates.js**: Shell function templates for different shells (bash, zsh, fish)
 - **package.json**: NPM package configuration with postinstall hook
-- **~/.ccenv/settings.json**: Configuration file containing API profiles in nested format
+- **~/.ccenv/settings.json**: Configuration file containing API profiles and language settings
 
 ## Configuration Structure
 
@@ -20,6 +23,7 @@ The project uses a nested JSON structure where environment variables are stored 
 ```json
 {
   "defaultProfile": null,
+  "language": "zh",
   "profiles": [
     {
       "name": "kimi",
@@ -65,6 +69,10 @@ The project uses a nested JSON structure where environment variables are stored 
 - `listProfiles()`: Displays all profiles with color-coded token status (green ✓ for configured, red ✗ for missing)
 - `generateEnvCommands()`: Creates shell commands to set environment variables
 - `colorGreen()` / `colorRed()`: ANSI color helper functions for status indicators
+- `handleLanguage()`: Manages language settings and switching
+- `t()`: Internationalization function from i18n.js for translating messages
+- `setLanguage()`: Changes current interface language
+- `getCurrentLanguage()`: Returns current active language
 
 ## Common Commands
 
@@ -113,6 +121,14 @@ ccenv default <profile>      # Set default profile
 ccenv edit                   # Edit configuration file
 ```
 
+#### 语言设置 (Language Settings)
+```bash
+ccenv lang                   # Show current interface language
+ccenv lang zh                # Set interface to Chinese
+ccenv lang en                # Set interface to English
+ccenv --lang en <command>    # Temporarily use English for one command
+```
+
 #### 备用使用方式 (如果 shell 函数未正确安装)
 ```bash
 eval "$(ccenv)"              # Interactive mode
@@ -140,6 +156,33 @@ This appears in:
 - `ccenv ls` (list configurations)
 - Status legend displayed at the bottom of the configuration list
 
+## Internationalization Support
+
+ccenv now features complete internationalization support:
+
+### Supported Languages
+- **Chinese (zh)**: 中文界面
+- **English (en)**: English interface
+
+### Language Detection Priority
+1. `--lang` command line parameter (temporary override)
+2. `CCENV_LANG` environment variable 
+3. `language` setting in configuration file
+4. System locale detection (LANG environment variable)
+5. Default to Chinese (zh)
+
+### Language Files
+- `src/locales/zh.json`: Chinese language resources
+- `src/locales/en.json`: English language resources
+- `src/i18n.js`: Internationalization core module
+
+### Key i18n Functions
+- `t(key, params)`: Translate message key with parameter substitution
+- `getCurrentLanguage()`: Get current active language
+- `setLanguage(lang)`: Change interface language
+- `detectSystemLanguage()`: Auto-detect system language from environment
+- `saveLanguageToConfig(lang)`: Persist language setting to config file
+
 ## Dependencies
 
 - Node.js: >= 14.0.0
@@ -148,11 +191,16 @@ This appears in:
 
 ## Environment Variables Managed
 
+### API Configuration Variables
 - ANTHROPIC_BASE_URL
-- ANTHROPIC_AUTH_TOKEN
+- ANTHROPIC_AUTH_TOKEN  
 - ANTHROPIC_MODEL
 - ANTHROPIC_SMALL_FAST_MODEL
 - CCENV_PROFILE (tracks currently active configuration)
+
+### Language Configuration Variables
+- CCENV_LANG (temporary language override)
+- LANG (system locale detection)
 
 ## Shell Function Installation
 

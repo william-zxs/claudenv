@@ -12,6 +12,8 @@ A convenient command-line tool for quickly switching between different Claude AP
 - 🔧 Automatic environment variable management (unset old config, set new config)
 - 🚀 Auto-launch `claude` command after switching
 - ⚙️ Support for direct configuration name specification for quick switching
+- 🌍 **Internationalization support (English/中文)**
+- 🔍 **Smart language detection based on system locale**
 - 📦 npm global installation support, cross-platform compatibility
 
 ## Installation
@@ -83,6 +85,21 @@ ccenv ls
 ```
 
 Shows all available configurations with their status.
+
+#### Language Settings
+
+```bash
+ccenv lang              # Show current interface language
+ccenv lang zh           # Set interface to Chinese
+ccenv lang en           # Set interface to English
+ccenv --lang en ls      # Temporarily use English for one command
+```
+
+ccenv supports internationalization with:
+- **Automatic language detection** based on system locale
+- **Persistent language settings** saved to configuration file
+- **Temporary language override** using `--lang` parameter
+- **Supported languages**: English (`en`), Chinese (`zh`)
 
 ## Configuration File
 
