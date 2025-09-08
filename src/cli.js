@@ -142,8 +142,12 @@ function generateEnvCommands(profile) {
   // 设置新环境变量
   if (profile.env) {
     Object.entries(profile.env).forEach(([key, value]) => {
-      if (value && value.trim()) {
-        commands.push(`export ${key}="${value}"`);
+      if (value !== null && value !== undefined && value !== '') {
+        // 确保值是字符串类型
+        const stringValue = String(value);
+        if (stringValue.trim()) {
+          commands.push(`export ${key}="${stringValue}"`);
+        }
       }
     });
   }
@@ -229,7 +233,7 @@ function listProfiles() {
     const current = currentProfile && currentProfile.name === profile.name ? '*' : ' ';
     const isDefault = defaultProfile === profile.name ? t('info.default_marker') : '';
     const baseUrl = profile.env?.ANTHROPIC_BASE_URL || 'N/A';
-    const hasToken = profile.env?.ANTHROPIC_AUTH_TOKEN && profile.env.ANTHROPIC_AUTH_TOKEN.trim();
+    const hasToken = profile.env?.ANTHROPIC_AUTH_TOKEN && String(profile.env.ANTHROPIC_AUTH_TOKEN).trim();
     const tokenStatus = hasToken ? colorGreen(t('label.token_configured')) : colorRed(t('label.token_missing'));
     console.error(`${current} ${profile.name}${isDefault} - ${baseUrl} ${tokenStatus}`);
   });
