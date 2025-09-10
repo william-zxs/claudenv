@@ -200,24 +200,24 @@ function autoApplyDefaultProfile() {
  */
 function showHelp() {
   const supportedLanguages = getSupportedLanguages().join(', ');
-  console.log(t('help.usage'));
-  console.log('');
-  console.log(t('help.commands'));
-  console.log(t('help.cmd.ls'));
-  console.log(t('help.cmd.use'));
-  console.log(t('help.cmd.default'));
-  console.log(t('help.cmd.default_set'));
-  console.log(t('help.cmd.edit'));
-  console.log(t('help.cmd.lang'));
-  console.log('');
-  console.log(t('help.options'));
-  console.log(t('help.opt.help'));
-  console.log(t('help.opt.version'));
-  console.log(t('help.opt.lang'));
-  console.log('');
-  console.log(t('help.description'));
-  console.log(t('help.desc.default_config'));
-  console.log(t('help.desc.supported_langs', { languages: supportedLanguages }));
+  console.error(t('help.usage'));
+  console.error('');
+  console.error(t('help.commands'));
+  console.error(t('help.cmd.ls'));
+  console.error(t('help.cmd.use'));
+  console.error(t('help.cmd.default'));
+  console.error(t('help.cmd.default_set'));
+  console.error(t('help.cmd.edit'));
+  console.error(t('help.cmd.lang'));
+  console.error('');
+  console.error(t('help.options'));
+  console.error(t('help.opt.help'));
+  console.error(t('help.opt.version'));
+  console.error(t('help.opt.lang'));
+  console.error('');
+  console.error(t('help.description'));
+  console.error(t('help.desc.default_config'));
+  console.error(t('help.desc.supported_langs', { languages: supportedLanguages }));
 }
 
 /**
@@ -249,7 +249,7 @@ function listProfiles() {
  */
 function showVersion() {
   const packageJson = require('../package.json');
-  console.log(t('version.ccenv', { version: packageJson.version }));
+  console.error(t('version.ccenv', { version: packageJson.version }));
 }
 
 /**
